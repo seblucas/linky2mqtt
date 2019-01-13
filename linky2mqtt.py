@@ -23,6 +23,7 @@
 import os, re, time, json, argparse
 from datetime import datetime as DateTime, timedelta as TimeDelta
 from linkyclient import LinkyClient
+import requests                     # pip install requests
 import paho.mqtt.publish as publish # pip install paho-mqtt
 
 verbose = False
@@ -45,17 +46,16 @@ def formatData(startDate, input):
     time = time + 30*60
   return result
 
-def getLinkyData():
+def getLinkyData(startDate):
   tstamp = int(time.time())
   try:
     client = LinkyClient(args.enedisUsername, args.enedisPassword)
     client.login()
-    if args.specificDay:
-      startDate = DateTime.strptime(args.specificDay, "%d/%m/%Y")
-      endDate = startDate + TimeDelta(days=7)
-      data = client.get_data_per_hour(startDate, endDate)
-      formatedData = formatData(startDate, data['data'])
+    endDate = startDate + TimeDelta(days=1)
+    data = client.get_data_per_hour(startDate, endDate)
+    print (data)
     client.close_session()
+    formatedData = formatData(startDate, data['data'])
     return (True, formatedData)
   except Exception as e:
     return (False, {"time": tstamp, "message": "Enedis not available : " + str(e)})
@@ -70,6 +70,8 @@ parser.add_argument('-m', '--mqtt-host', dest='host', action="store", default="1
                    help='Specify the MQTT host to connect to.')
 parser.add_argument('-d', '--day', dest='specificDay', action="store", default="",
                    help='Specify a specific day to transfer.')
+parser.add_argument('-l', '--latest', dest='latestReadingUrl', action="store", default="",
+                   help='Url with latest reading already stored.')
 parser.add_argument('-n', '--dry-run', dest='dryRun', action="store_true", default=False,
                    help='No data will be sent to the MQTT broker.')
 parser.add_argument('-o', '--last-time', dest='previousFilename', action="store", default="/tmp/linky_last",
@@ -88,10 +90,24 @@ verbose = args.verbose
 oldTimestamp = 0
 if os.path.isfile(args.previousFilename):
   oldTimestamp = int(open(args.previousFilename).read(10))
+else:
+  if args.latestReadingUrl:
+    r = requests.get(args.latestReadingUrl)
+    oldTimestamp = int(r.text)
 
-status, dataArray = getLinkyData()
 
-# jsonString = json.dumps(data)
+if args.specificDay:
+  startDate = DateTime.strptime(args.specificDay, "%d/%m/%Y")
+else:
+  utc_time = DateTime.utcfromtimestamp(oldTimestamp).replace(hour=0, minute=0)
+  startDate = utc_time + TimeDelta(days=1)
+
+if DateTime.today().date() == startDate.date():
+  print ("nothing new")
+  exit()
+
+status, dataArray = getLinkyData(startDate)
+
 if status:
   for data in dataArray:
     jsonString = json.dumps(data)
