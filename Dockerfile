@@ -8,11 +8,9 @@ ADD https://raw.githubusercontent.com/LudovicRousseau/pyLinky/da23eae85df185d8e5
 
 RUN pip3 install -r /tmp/requirements.txt
 
-
-
 COPY *.py /usr/bin/
 
 RUN chmod +x /usr/bin/linky2mqtt.py && \
     chmod +x /bin/runCron.sh
 
-ENTRYPOINT ["/bin/sh"]
+ENTRYPOINT ["runCron.sh"]
