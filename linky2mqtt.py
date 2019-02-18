@@ -50,9 +50,9 @@ def getLinkyData(startDate):
   tstamp = int(time.time())
   try:
     client = LinkyClient(args.enedisUsername, args.enedisPassword)
-    client.login()
+    client.get_httpsession()
     endDate = startDate + TimeDelta(days=1)
-    data = client.get_data_per_hour(startDate, endDate)
+    data = client.get_data_per_period(start=startDate, end=endDate)
     print (data)
     client.close_session()
     formatedData = formatData(startDate, data['data'])

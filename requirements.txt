@@ -1,3 +1,5 @@
 paho-mqtt
-requests
 python-dateutil
+requests
+simplejson
+fake_useragent
