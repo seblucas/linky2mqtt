@@ -22,7 +22,7 @@
 
 import os, re, time, json, argparse
 from datetime import datetime as DateTime, timedelta as TimeDelta
-from linkyclient import LinkyClient
+from pylinky import LinkyClient
 import requests                     # pip install requests
 import paho.mqtt.publish as publish # pip install paho-mqtt
 
@@ -50,7 +50,7 @@ def getLinkyData(startDate):
   tstamp = int(time.time())
   try:
     client = LinkyClient(args.enedisUsername, args.enedisPassword)
-    client.get_httpsession()
+    client.login()
     endDate = startDate + TimeDelta(days=1)
     data = client.get_data_per_period(start=startDate, end=endDate)
     print (data)

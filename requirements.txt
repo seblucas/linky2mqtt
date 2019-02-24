@@ -1,5 +1,3 @@
 paho-mqtt
-python-dateutil
+pylinky
 requests
-simplejson
-fake_useragent
